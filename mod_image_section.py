@@ -2,14 +2,17 @@ from PIL import Image
 import numpy as np
 import sys
 import os
+from scipy import ndimage
 print("###Starting###")
 
 directory = sys.argv[1]
 out_dir = sys.argv[2]
-attack_type = sys.argv[3]
-param = int(sys.argv[4])
-category = int(sys.argv[5])
-
+category = int(sys.argv[3])
+attack_type = sys.argv[4]
+param = int(sys.argv[5])
+param2 = None
+if len(sys.argv) > 6:
+	param2 = int(sys.argv[6])
 
 def main():
 	for filename in os.listdir(directory):
@@ -29,7 +32,8 @@ def main():
 				
 				mask = mask.repeat(2, axis=0).repeat(2, axis=1)
 				mask = np.repeat(mask[:, :, np.newaxis], 3, axis=2)
-
+				if param2 != None:
+					mask = ndimage.binary_dilation(mask, iterations=param2).astype(mask.dtype)
 				img_arr = np.array(np.array(img), dtype= np.uint32)
 				# INSERT ATTACKS HERE
 				if attack_type == "brightening":
@@ -39,6 +43,7 @@ def main():
 					noise_old[mask == 0] = 0
 					noise = np.array(noise_old, dtype = np.float32)
 					img_arr = np.add(img_arr, noise)
+
 				
 				img_arr[img_arr>255] = 255
 				img_arr[img_arr<0] = 0
